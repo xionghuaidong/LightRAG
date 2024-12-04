@@ -186,7 +186,19 @@ def csv_string_to_list(csv_string: str) -> List[List[str]]:
     reader = csv.reader(output)
     return [row for row in reader]
 
-
+def list_of_list_to_records(data: List[List[str]]) -> list[dict]:
+    records = []
+    for row in data[1:]:
+        record = {}
+        for key, value in zip(data[0], row):
+            key = key.strip()
+            if isinstance(value, str):
+                value = value.strip()
+                if value.startswith('"') and value.endswith('"'):
+                    value = value[1:-1]
+            record[key] = value
+        records.append(record)
+    return records
 
 
 def save_data_to_file(data, file_name):

@@ -11,7 +11,9 @@ from .utils import (
     decode_tokens_by_tiktoken,
     encode_string_by_tiktoken,
     is_float_regex,
+    csv_string_to_list,
     list_of_list_to_csv,
+    list_of_list_to_records,
     pack_user_ass_to_openai_messages,
     split_string_by_multi_markers,
     truncate_list_by_token_size,
@@ -527,6 +529,12 @@ async def _build_local_query_context(
     for i, t in enumerate(use_text_units):
         text_units_section_list.append([i, t["content"]])
     text_units_context = list_of_list_to_csv(text_units_section_list)
+    query_param._local_context = {
+        "Entities": list_of_list_to_records(entites_section_list),
+        "Relationships": list_of_list_to_records(relations_section_list),
+        "Sources": list_of_list_to_records(text_units_section_list),
+    }
+
     return f"""
 -----Entities-----
 ```csv
@@ -792,6 +800,11 @@ async def _build_global_query_context(
     for i, t in enumerate(use_text_units):
         text_units_section_list.append([i, t["content"]])
     text_units_context = list_of_list_to_csv(text_units_section_list)
+    query_param._global_context = {
+        "Entities": list_of_list_to_records(entites_section_list),
+        "Relationships": list_of_list_to_records(relations_section_list),
+        "Sources": list_of_list_to_records(text_units_section_list),
+    }
 
     return f"""
 -----Entities-----
@@ -940,7 +953,7 @@ async def hybrid_query(
         )
 
 
-    context = combine_contexts(high_level_context, low_level_context)
+    context = combine_contexts(high_level_context, low_level_context, query_param)
 
     if query_param.only_need_context:
         return context
@@ -965,10 +978,18 @@ async def hybrid_query(
             .replace("</system>", "")
             .strip()
         )
+    context = {
+        "high_level_keywords": hl_keywords,
+        "low_level_keywords": ll_keywords,
+        "high_level_context": getattr(query_param, "_global_context", None),
+        "low_level_context": getattr(query_param, "_local_context", None),
+        "hybrid_context": getattr(query_param, "_hybrid_context", None),
+    }
+    query_param._context = context
     return response
 
 
-def combine_contexts(high_level_context, low_level_context):
+def combine_contexts(high_level_context, low_level_context, query_param):
     # Function to extract entities, relationships, and sources from context strings
 
     def extract_sections(context):
@@ -1014,6 +1035,12 @@ def combine_contexts(high_level_context, low_level_context):
 
     # Combine and deduplicate the sources
     combined_sources = process_combine_contexts(hl_sources, ll_sources)
+
+    query_param._hybrid_context = {
+        "Entities": list_of_list_to_records(csv_string_to_list(combined_entities)),
+        "Relationships": list_of_list_to_records(csv_string_to_list(combined_relationships)),
+        "Sources": list_of_list_to_records(csv_string_to_list(combined_sources)),
+    }
 
     # Format the combined context
     return f"""
