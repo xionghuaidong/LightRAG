@@ -6,7 +6,8 @@ from transformers import GPT2Tokenizer
 def openai_complete_if_cache(
     model="gpt-4o", prompt=None, system_prompt=None, history_messages=[], **kwargs
 ) -> str:
-    openai_client = OpenAI()
+    #openai_client = OpenAI(api_key="EMPTY", base_url="http://127.0.0.1:28080/v1")
+    openai_client = OpenAI(api_key="sk-xxxxx", base_url="https://api.deepseek.com")
 
     messages = []
     if system_prompt:
@@ -15,7 +16,8 @@ def openai_complete_if_cache(
     messages.append({"role": "user", "content": prompt})
 
     response = openai_client.chat.completions.create(
-        model=model, messages=messages, **kwargs
+        #model=model, messages=messages, **kwargs
+        model="deepseek-chat", messages=messages, **kwargs
     )
     return response.choices[0].message.content
 

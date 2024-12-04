@@ -15,12 +15,15 @@ async def llm_model_func(
     prompt, system_prompt=None, history_messages=[], **kwargs
 ) -> str:
     return await openai_complete_if_cache(
-        "solar-mini",
+        #"solar-mini",
+        "deepseek-chat",
         prompt,
         system_prompt=system_prompt,
         history_messages=history_messages,
-        api_key=os.getenv("UPSTAGE_API_KEY"),
-        base_url="https://api.upstage.ai/v1/solar",
+        #api_key=os.getenv("UPSTAGE_API_KEY"),
+        api_key="sk-xxxxx",
+        #base_url="https://api.upstage.ai/v1/solar",
+        base_url="https://api.deepseek.com",
         **kwargs,
     )
 
@@ -28,9 +31,11 @@ async def llm_model_func(
 async def embedding_func(texts: list[str]) -> np.ndarray:
     return await openai_embedding(
         texts,
-        model="solar-embedding-1-large-query",
-        api_key=os.getenv("UPSTAGE_API_KEY"),
-        base_url="https://api.upstage.ai/v1/solar",
+        #model="text-embedding-ada-002",
+        #model="bge-base-en-v1.5",
+        model="bge-m3",
+        api_key="EMPTY",
+        base_url="http://127.0.0.1:38080/v1",
     )
 
 
@@ -94,16 +99,17 @@ def run_queries_and_save_to_json(
 
 
 if __name__ == "__main__":
-    cls = "mix"
+    #cls = "mix"
+    cls = "agriculture"
     mode = "hybrid"
     WORKING_DIR = f"../{cls}"
 
-    rag = LightRAG(working_dir=WORKING_DIR)
+    #rag = LightRAG(working_dir=WORKING_DIR)
     rag = LightRAG(
         working_dir=WORKING_DIR,
         llm_model_func=llm_model_func,
         embedding_func=EmbeddingFunc(
-            embedding_dim=4096, max_token_size=8192, func=embedding_func
+            embedding_dim=1024, max_token_size=8192, func=embedding_func
         ),
     )
     query_param = QueryParam(mode=mode)

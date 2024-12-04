@@ -14,12 +14,15 @@ async def llm_model_func(
     prompt, system_prompt=None, history_messages=[], **kwargs
 ) -> str:
     return await openai_complete_if_cache(
-        "solar-mini",
+        #"gpt-4o-mini",
+        "deepseek-chat",
         prompt,
         system_prompt=system_prompt,
         history_messages=history_messages,
-        api_key=os.getenv("UPSTAGE_API_KEY"),
-        base_url="https://api.upstage.ai/v1/solar",
+        #api_key="EMPTY",
+        api_key="sk-xxxxx",
+        #base_url="http://127.0.0.1:38080/v1",
+        base_url="https://api.deepseek.com",
         **kwargs,
     )
 
@@ -27,9 +30,11 @@ async def llm_model_func(
 async def embedding_func(texts: list[str]) -> np.ndarray:
     return await openai_embedding(
         texts,
-        model="solar-embedding-1-large-query",
-        api_key=os.getenv("UPSTAGE_API_KEY"),
-        base_url="https://api.upstage.ai/v1/solar",
+        #model="text-embedding-ada-002",
+        #model="bge-base-en-v1.5",
+        model="bge-m3",
+        api_key="EMPTY",
+        base_url="http://127.0.0.1:38080/v1",
     )
 
 
@@ -53,8 +58,7 @@ def insert_text(rag, file_path):
     if retries == max_retries:
         print("Insertion failed after exceeding the maximum number of retries")
 
-
-cls = "mix"
+cls = "agriculture"
 WORKING_DIR = f"../{cls}"
 
 if not os.path.exists(WORKING_DIR):
@@ -64,7 +68,7 @@ rag = LightRAG(
     working_dir=WORKING_DIR,
     llm_model_func=llm_model_func,
     embedding_func=EmbeddingFunc(
-        embedding_dim=4096, max_token_size=8192, func=embedding_func
+        embedding_dim=1024, max_token_size=8192, func=embedding_func
     ),
 )
 
